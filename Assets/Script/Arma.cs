@@ -40,6 +40,7 @@ public class Arma : MonoBehaviour
             );
 
             Rigidbody rb = newProyectil.GetComponent<Rigidbody>();
+            float masaFinal = 0f;
 
             if (rb != null)
             {
@@ -49,11 +50,20 @@ public class Arma : MonoBehaviour
                     rb.mass = data.weightSlider.value;
                 }
 
+                masaFinal = rb.mass;
+
                 // Fuerza
                 rb.AddForce(
                     data.spawnPoint.up * data.force,
                     ForceMode.Impulse
                 );
+            }
+
+            // Le paso al proyectil los datos del disparo para que los guarde en UGS
+            Proyectil proyectilScript = newProyectil.GetComponent<Proyectil>();
+            if (proyectilScript != null)
+            {
+                proyectilScript.ConfigurarDisparo(data.angle, data.force, masaFinal);
             }
 
             Destroy(newProyectil, 5f);
@@ -74,6 +84,7 @@ public class Arma : MonoBehaviour
     public void ChangeAngle()
     {
         float angle = data.angleSlider.value;
+        data.angle = angle;   // guardo el ángulo para poder usarlo al disparar
 
         transform.rotation = Quaternion.Euler(
             angle,

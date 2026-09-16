@@ -1,5 +1,4 @@
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -10,12 +9,13 @@ public class ArmaData
     public GameObject proyectil;
     public Transform spawnPoint;
     public float force = 10f;
+    public float angle = 0f;
 
     [Header("UI - Fuerza")]
     public Slider forceSlider;
     public TextMeshProUGUI forceText;
 
-    [Header("UI - �ngulo")]
+    [Header("UI - Ángulo")]
     public Slider angleSlider;
     public TextMeshProUGUI angleText;
 
