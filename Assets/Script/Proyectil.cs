@@ -33,7 +33,7 @@ public class Proyectil : MonoBehaviour
         masaDisparo = masa;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private async void OnCollisionEnter(Collision collision)
     {
         if (data == null) return;
 
@@ -48,17 +48,33 @@ public class Proyectil : MonoBehaviour
         if (data.textoDistancia != null)
             data.textoDistancia.text = "Distancia: " + distancia.ToString(data.distanceFormat) + " m";
 
+        // NUEVO: objetosAfectados ahora cuenta SOLO objetos con tag "Target",
+        // no cualquier collider que esté en el radio.
         int objetosAfectados = 0;
-        if (esTarget && data.radioImpacto > 0f)
+        if (esTarget)
         {
-            Collider[] hits = Physics.OverlapSphere(transform.position, data.radioImpacto);
-            objetosAfectados = hits.Length;
+            objetosAfectados = 1; // el target impactado directamente
+
+            if (data.radioImpacto > 0f)
+            {
+                Collider[] hits = Physics.OverlapSphere(transform.position, data.radioImpacto);
+                foreach (var hit in hits)
+                {
+                    // Evitamos contar dos veces el mismo objeto que ya impactó directo.
+                    if (hit.gameObject != collision.gameObject && hit.CompareTag(data.targetTag))
+                        objetosAfectados++;
+                }
+            }
         }
 
         var resultado = new ResultadoDisparo(
             anguloDisparo, fuerzaDisparo, masaDisparo, esTarget, distancia, objetosAfectados
         );
 
-        _ = CloudSaveManager.Instance.GuardarResultado(resultado);
+        await CloudSaveManager.Instance.GuardarResultado(resultado);
+
+        // NUEVO: refresca el panel de puntaje automáticamente, sin botón.
+        if (PuntajeUI.Instance != null)
+            await PuntajeUI.Instance.ActualizarPuntaje();
     }
 }

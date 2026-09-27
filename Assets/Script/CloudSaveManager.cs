@@ -50,7 +50,30 @@ public class CloudSaveManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error inicializando UGS: " + e.Message);
+            Debug.LogError("Error inicializando UGS: " + e);
+            LogInnerExceptions(e);
+        }
+    }
+
+    // Imprime toda la cadena de InnerException y, si corresponde,
+    // todas las excepciones agrupadas dentro de un AggregateException.
+    // Esto es lo que permite ver la causa REAL detrás del mensaje
+    // genérico "Some services couldn't be initialized".
+    void LogInnerExceptions(Exception e)
+    {
+        var inner = e.InnerException;
+        int nivel = 1;
+        while (inner != null)
+        {
+            Debug.LogError($"Inner exception (nivel {nivel}): {inner}");
+            inner = inner.InnerException;
+            nivel++;
+        }
+
+        if (e is AggregateException agg)
+        {
+            foreach (var ex in agg.InnerExceptions)
+                Debug.LogError("Aggregate inner: " + ex);
         }
     }
 
@@ -80,7 +103,8 @@ public class CloudSaveManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error cargando desde UGS: " + e.Message);
+            Debug.LogError("Error cargando desde UGS: " + e);
+            LogInnerExceptions(e);
             listaLocal = new List<ResultadoDisparo>();
         }
 
@@ -108,7 +132,8 @@ public class CloudSaveManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error guardando en UGS: " + e.Message);
+            Debug.LogError("Error guardando en UGS: " + e);
+            LogInnerExceptions(e);
         }
         finally
         {
@@ -123,6 +148,18 @@ public class CloudSaveManager : MonoBehaviour
         // siempre vea el estado más actualizado.
         var lista = await ObtenerListaLocal();
         return lista;
+    }
+
+    // Suma el puntaje de todos los disparos guardados.
+    // No hace falta guardar un número aparte: se calcula a partir
+    // de la misma lista que ya se guarda en la nube.
+    public async Task<int> ObtenerPuntajeTotal()
+    {
+        var lista = await ObtenerListaLocal();
+        int total = 0;
+        foreach (var r in lista)
+            total += r.puntaje;
+        return total;
     }
 
     // Borra todo el historial guardado (útil para limpiar datos de prueba).
@@ -143,7 +180,8 @@ public class CloudSaveManager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError("Error borrando historial en UGS: " + e.Message);
+            Debug.LogError("Error borrando historial en UGS: " + e);
+            LogInnerExceptions(e);
         }
         finally
         {
